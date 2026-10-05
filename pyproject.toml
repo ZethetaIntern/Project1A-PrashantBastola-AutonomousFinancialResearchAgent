@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autonomous-financial-research-agent"
+version = "0.1.0"
+description = "Production-grade autonomous financial research agent with multi-source synthesis."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Prashant Bastola" }
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
