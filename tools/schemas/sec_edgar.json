@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "ticker": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10
+    },
+    "filing_type": {
+      "type": "string",
+      "enum": ["10-K", "10-Q", "8-K"]
+    }
+  },
+  "required": ["ticker"],
+  "additionalProperties": false
+}

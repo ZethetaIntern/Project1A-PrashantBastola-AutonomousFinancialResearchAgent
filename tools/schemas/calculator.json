@@ -1,0 +1,21 @@
+
+{
+  "type": "object",
+  "properties": {
+    "operation": {
+      "type": "string",
+      "enum": ["add", "subtract", "multiply", "divide"],
+      "description": "Arithmetic operation to perform."
+    },
+    "a": {
+      "type": "number",
+      "description": "First finite numeric operand."
+    },
+    "b": {
+      "type": "number",
+      "description": "Second finite numeric operand."
+    }
+  },
+  "required": ["operation", "a", "b"],
+  "additionalProperties": false
+}

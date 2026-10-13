@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "ticker": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["company_name", "ticker", "findings"],
+  "additionalProperties": false
+}

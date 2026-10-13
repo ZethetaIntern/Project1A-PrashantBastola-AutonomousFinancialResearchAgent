@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "ticker": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10
+    },
+    "fiscal_period": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30
+    }
+  },
+  "required": ["ticker"],
+  "additionalProperties": false
+}
