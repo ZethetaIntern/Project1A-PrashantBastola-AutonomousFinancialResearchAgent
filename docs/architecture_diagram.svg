@@ -106,5 +106,5 @@
   <path d="M700 1012 V1035" class="edge"/>
   <rect x="290" y="1035" width="820" height="58" class="output"/>
   <text x="700" y="1059" text-anchor="middle" class="heading">Final Research Report or Explicitly Partial Report</text>
-  <text x="700" y="1079" text-anchor="middle" class="body">Summary • Company Overview • Financial Analysis • Risks • Competition • Methodology</text>
+  <text x="700" y="1079" text-anchor="middle" class="body">Executive Summary • Company Overview • Financial Analysis • Risk Assessment • Competitive Position • Research Methodology Notes</text>
 </svg>
