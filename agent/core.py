@@ -1,75 +1,140 @@
+
 """Core loop for the autonomous financial research agent."""
 
-import json
 import logging
 from typing import Any
 
-from llm.client import LLMClient
-from tools.tool_registry import ToolRegistry, build_default_registry
 from agent.parser import ResponseParseError, parse_response
 from agent.prompts import build_system_prompt
+from llm.client import LLMClient
+from tools.tool_registry import ToolRegistry, build_default_registry
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_ALLOWED_TOOLS = {
+    "company_profile",
+    "financial_api",
+    "web_search",
+}
 
-class AgentError(RuntimeError):
-    """Raised when the agent cannot complete a research request."""
+
+class AgentError(Exception):
+    """Raised when the agent cannot process an LLM response."""
 
 
 class FinancialResearchAgent:
-    """Coordinate LLM responses, tool execution, and final answers."""
+    """Gather research evidence and synthesize a final answer."""
 
     def __init__(
         self,
-        llm_client: LLMClient | None = None,
-        tool_registry: ToolRegistry | None = None,
-        max_iterations: int = 8,
-        max_tokens: int = 1200,
+        llm_client: LLMClient,
+        tool_registry: ToolRegistry,
+        max_iterations: int = 5,
+        max_tokens: int = 800,
+        allowed_tools: set[str] | None = None,
     ) -> None:
         if max_iterations < 1:
-            raise ValueError("max_iterations must be at least 1.")
-        if max_tokens < 1:
-            raise ValueError("max_tokens must be at least 1.")
+            raise ValueError("max_iterations must be at least 1")
 
-        self.llm_client = llm_client or LLMClient()
-        self.tool_registry = tool_registry or build_default_registry()
+        if max_tokens < 1:
+            raise ValueError("max_tokens must be at least 1")
+
+        self.llm_client = llm_client
+        self.tool_registry = tool_registry
         self.max_iterations = max_iterations
         self.max_tokens = max_tokens
-
-    def run(self, query: str) -> dict[str, Any]:
-        """Run a research query until a final answer or iteration limit."""
-        if not isinstance(query, str) or not query.strip():
-            raise ValueError("Research query cannot be empty.")
-
-        tools = self.tool_registry.list_tools()
-        system_prompt = build_system_prompt(tools)
-
-        messages: list[dict[str, str]] = [
-            {"role": "user", "content": query.strip()}
-        ]
-        tool_history: list[dict[str, Any]] = []
-
-        logger.info(
-            "Agent started: max_iterations=%s query=%s",
-            self.max_iterations,
-            query.strip(),
+        self.allowed_tools = (
+            set(allowed_tools)
+            if allowed_tools is not None
+            else set(DEFAULT_ALLOWED_TOOLS)
         )
 
+    def run(self, query: str) -> dict[str, Any]:
+        """Run the research workflow and return its answer and evidence."""
+
+        if not isinstance(query, str) or not query.strip():
+            raise ValueError("query cannot be empty")
+
+        tool_history: list[dict[str, Any]] = []
+        executed_calls: set[tuple[str, str]] = set()
+        research_context = ""
+        final_answer = ""
+        status = "max_iterations_reached"
+        iterations_used = 0
+
+        available_tools = [
+            tool
+            for tool in self.tool_registry.list_tools()
+            if tool.get("function", {}).get("name")
+            in self.allowed_tools
+        ]
+
+        system_prompt = build_system_prompt(available_tools)
+
+        def make_result(
+            result_status: str,
+            answer: str,
+            iterations: int,
+            error: str | None = None,
+        ) -> dict[str, Any]:
+            """Return a consistent result with tool history and usage."""
+
+            result: dict[str, Any] = {
+                "status": result_status,
+                "answer": answer,
+                "iterations": iterations,
+                "tool_calls": tool_history,
+            }
+
+            try:
+                usage = self.llm_client.get_usage()
+                if usage is not None:
+                    result["usage"] = usage
+            except Exception:
+                logger.exception("Unable to retrieve LLM usage")
+
+            if error:
+                result["error"] = error
+
+            return result
+
         for iteration in range(1, self.max_iterations + 1):
+            iterations_used = iteration
+            synthesis_only = iteration == self.max_iterations
+
+            if synthesis_only:
+                instruction = (
+                    "FINAL SYNTHESIS: Do not call any tools. Answer the user's "
+                    "original request using the evidence collected so far. "
+                    "Clearly identify missing information and limitations. "
+                    "Do not invent facts, figures, estimates, citations, "
+                    "executives, or events. Return a final answer using "
+                    'JSON: {"type":"final","answer":"your complete answer"} '
+                    'or {"action":"final","answer":"your complete answer"}.'
+                )
+            else:
+                instruction = (
+                    "Continue researching the user's request using available "
+                    "tools when useful. Do not repeat a tool call with the "
+                    "same arguments. If enough evidence is available, return "
+                    "a final answer. For a tool call, return JSON such as "
+                    '{"action":"execute","name":"company_profile",'
+                    '"arguments":{"ticker":"MSFT"}} or the legacy format '
+                    '{"tool_call":{"name":"company_profile",'
+                    '"arguments":{"ticker":"MSFT"}}}. For a final answer, '
+                    'return {"type":"final","answer":"your answer"}.'
+                )
+
+
+
             prompt = (
-                f"Research conversation so far:\n"
-                f"{json.dumps(messages, ensure_ascii=False, indent=2)}\n\n"
-                f"Tool execution history:\n"
-                f"{json.dumps(tool_history, ensure_ascii=False, indent=2)}\n\n"
-                "Decide whether to call an available tool or provide the "
-                "final answer. Follow the required JSON response format."
+                f"User request:\n{query}\n\n"
+                f"Research evidence collected so far:\n"
+                f"{research_context or 'No evidence collected yet.'}\n\n"
+                f"{instruction}"
             )
 
-            logger.info(
-                "Agent iteration %s/%s",
-                iteration,
-                self.max_iterations,
-            )
+
 
             try:
                 response = self.llm_client.complete(
@@ -78,111 +143,177 @@ class FinancialResearchAgent:
                     max_tokens=self.max_tokens,
                 )
                 parsed = parse_response(response.text)
+
             except (ResponseParseError, ValueError, TypeError) as exc:
-                logger.warning(
-                    "Agent could not process LLM response at iteration %s: %s",
-                    iteration,
-                    exc,
-                )
                 raise AgentError(
                     f"Could not process the LLM response at iteration "
                     f"{iteration}: {exc}"
                 ) from exc
-            except Exception as exc:
-                logger.exception("LLM request failed at iteration %s", iteration)
-                raise AgentError(
-                    f"LLM request failed at iteration {iteration}."
-                ) from exc
 
-            if parsed.response_type == "final":
-                answer = parsed.content.strip()
-                logger.info(
-                    "Agent completed after %s iteration(s).",
+            except Exception as exc:
+                logger.exception(
+                    "LLM request failed at iteration %s",
                     iteration,
                 )
-                return {
-                    "answer": answer,
-                    "iterations": iteration,
-                    "tool_calls": tool_history,
-                    "usage": self.llm_client.get_usage(),
-                    "status": "completed",
-                }
+                return make_result(
+                    result_status="failed",
+                    answer=(
+                        "The agent could not complete the research report. "
+                        "Collected evidence is preserved in tool_calls."
+                    ),
+                    iterations=iteration,
+                    error=f"{type(exc).__name__}: {exc}",
+                )
+
+            # The parser returns a ParsedResponse dataclass, not a dictionary.
+            if parsed.response_type == "final":
+                final_answer = parsed.content.strip()
+
+                if not final_answer:
+                    return make_result(
+                        result_status="failed",
+                        answer="The model returned an empty final answer.",
+                        iterations=iteration,
+                        error="Empty final answer",
+                    )
+
+                status = "completed"
+                break
 
             if parsed.response_type != "tool_call":
                 raise AgentError(
-                    f"Unsupported response type: {parsed.response_type}"
+                    f"Could not process the LLM response at iteration "
+                    f"{iteration}: unexpected response type "
+                    f"{parsed.response_type!r}"
                 )
 
             tool_name = parsed.tool_name
             arguments = parsed.arguments or {}
 
-            logger.info(
-                "Agent requested tool: name=%s arguments=%s",
+            if not tool_name:
+                raise AgentError(
+                    f"Could not process the LLM response at iteration "
+                    f"{iteration}: missing tool name"
+                )
+
+            # Never execute tools on the reserved synthesis iteration.
+            if synthesis_only:
+                status = "max_iterations_reached"
+                final_answer = (
+                    "Research reached its iteration limit without a final "
+                    "answer. Review the collected evidence in tool_calls."
+                )
+                break
+
+            if tool_name not in self.allowed_tools:
+                tool_history.append(
+                    {
+                        "iteration": iteration,
+                        "tool": tool_name,
+                        "arguments": arguments,
+                        "status": "rejected",
+                        "error": "Tool is not allowed for this research run.",
+                    }
+                )
+                continue
+
+            # A stable JSON representation supports nested argument values.
+            import json
+
+            call_key = (
                 tool_name,
-                arguments,
+                json.dumps(arguments, sort_keys=True, default=str),
             )
 
-            result = self.tool_registry.execute(tool_name, arguments)
-            tool_history.append(
-                {
+            if call_key in executed_calls:
+                tool_history.append(
+                    {
+                        "iteration": iteration,
+                        "tool": tool_name,
+                        "arguments": arguments,
+                        "status": "skipped_duplicate",
+                    }
+                )
+                continue
+
+            executed_calls.add(call_key)
+
+            try:
+                tool_result = self.tool_registry.execute(
+                    tool_name,
+                    arguments,
+                )
+
+                succeeded = (
+                    isinstance(tool_result, dict)
+                    and tool_result.get("success") is not False
+                    and not tool_result.get("error")
+                )
+
+                record = {
                     "iteration": iteration,
                     "tool": tool_name,
                     "arguments": arguments,
-                    "result": result,
+                    "status": "success" if succeeded else "failed",
+                    "result": tool_result,
                 }
+
+                if not succeeded:
+                    record["error"] = (
+                        tool_result.get("error", "Tool execution failed.")
+                        if isinstance(tool_result, dict)
+                        else "Tool returned an invalid result."
+                    )
+
+                tool_history.append(record)
+
+                evidence = (
+                    f"\n\nTool: {tool_name}\n"
+                    f"Arguments: {json.dumps(arguments, default=str)}\n"
+                    f"Result: {json.dumps(tool_result, default=str)}"
+                )
+                research_context = (research_context + evidence)[-6000:]
+
+            except Exception as exc:
+                logger.exception("Tool execution failed: %s", tool_name)
+
+                tool_history.append(
+                    {
+                        "iteration": iteration,
+                        "tool": tool_name,
+                        "arguments": arguments,
+                        "status": "failed",
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                )
+
+                # Continue to the next LLM iteration so the model can
+                # respond to the tool failure or try another tool.
+
+        if not final_answer:
+            final_answer = (
+                "Research stopped at the iteration limit. "
+                "The collected evidence may be incomplete."
             )
 
-            # Feed the tool result back into the next LLM request.
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": json.dumps(
-                        {
-                            "tool_call": {
-                                "name": tool_name,
-                                "arguments": arguments,
-                            }
-                        },
-                        ensure_ascii=False,
-                    ),
-                }
-            )
-            messages.append(
-                {
-                    "role": "user",
-                    "content": (
-                        "Tool result:\n"
-                        + json.dumps(result, ensure_ascii=False)
-                        + "\nUse this result as evidence. If the tool failed, "
-                        "acknowledge that limitation. Continue research or "
-                        "provide your final answer."
-                    ),
-                }
-            )
-
-        logger.warning(
-            "Agent reached maximum iterations (%s).",
-            self.max_iterations,
+        return make_result(
+            result_status=status,
+            answer=final_answer,
+            iterations=iterations_used,
         )
-        return {
-            "answer": (
-                "Research stopped because the maximum number of agent "
-                "iterations was reached. The available evidence may be "
-                "incomplete."
-            ),
-            "iterations": self.max_iterations,
-            "tool_calls": tool_history,
-            "usage": self.llm_client.get_usage(),
-            "status": "max_iterations_reached",
-        }
 
 
 def create_agent(
-    max_iterations: int = 8,
-    max_tokens: int = 1200,
+    max_iterations: int = 5,
+    max_tokens: int = 800,
+    allowed_tools: set[str] | None = None,
 ) -> FinancialResearchAgent:
-    """Construct an agent with the default LLM client and tools."""
+    """Create an agent using the default LLM client and tool registry."""
+
     return FinancialResearchAgent(
+        llm_client=LLMClient(),
+        tool_registry=build_default_registry(),
         max_iterations=max_iterations,
         max_tokens=max_tokens,
+        allowed_tools=allowed_tools,
     )

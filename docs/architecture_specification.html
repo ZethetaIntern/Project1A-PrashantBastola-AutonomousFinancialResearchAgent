@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.12.1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>architecture_specification</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      color: light-dark(#1a1a1a, #fdfdfd);
+      background-color: #fdfdfd;
+      background-color: light-dark(#fdfdfd, #1a1a1a);
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        color-scheme: light only;
+      }
+      html, body, pre, code {
+        background-color: transparent;
+      }
+      body, a, a:visited, blockquote {
+        color: black;
+      }
+      pre, code {
+        padding: 0;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a, a:visited {
+      color: inherit;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid;
+      border-color: #e6e6e6;
+      border-color: light-dark(#e6e6e6, #4c4c4c);
+      color: #606060;
+      color: light-dark(#606060, #b6b6b6);
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid currentColor;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid currentColor;
+      border-bottom: 1px solid currentColor;
+    }
+    th {
+      border-top: 1px solid currentColor;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="autonomous-financial-research-agent">Autonomous Financial
+Research Agent</h1>
+<h2 id="architecture-specification">Architecture Specification</h2>
+<p><strong>Project:</strong> Project 1A — Autonomous Financial Research
+Agent with Multi-Source Synthesis<br />
+<strong>Author:</strong> Prashant Bastola<br />
+<strong>Version:</strong> 1.0.0<br />
+<strong>Status:</strong> Architecture specification<br />
+<strong>Repository:</strong>
+Project1A-PrashantBastola-AutonomousFinancialResearchAgent</p>
+<hr />
+<h2 id="executive-overview">1. Executive Overview</h2>
+<p>The Autonomous Financial Research Agent is designed to investigate
+financial and company-related questions by planning research tasks,
+retrieving information from multiple sources, validating evidence,
+resolving conflicting information, and generating structured research
+reports.</p>
+<p>The system combines a Plan-and-Execute strategy with a ReAct-style
+execution loop. Planning decomposes a research question into manageable
+tasks, while iterative execution allows the agent to adapt to new
+evidence, unavailable sources, and unexpected findings.</p>
+<p>The architecture separates agent orchestration, research tools,
+memory, evidence synthesis, error handling, evaluation, and report
+generation. This separation supports independent testing, controlled
+tool execution, and future extension.</p>
+<p>The system prioritizes factual accuracy, traceable evidence,
+transparent uncertainty, bounded execution, and graceful degradation. It
+must never fabricate missing information or silently conceal material
+conflicts.</p>
+<p>This document defines the intended architecture and implementation
+contracts. A component is not considered implemented merely because it
+appears in this specification; implementation must be supported by
+working code and appropriate tests.</p>
+<h2 id="purpose-and-scope">2. Purpose and Scope</h2>
+<h3 id="purpose">2.1 Purpose</h3>
+<p>The purpose of the project is to build an autonomous research system
+capable of conducting structured financial research with minimal manual
+intervention.</p>
+<p>The agent should:</p>
+<ul>
+<li>Understand and classify a financial research question.</li>
+<li>Identify the company, ticker, reporting period, and research
+objective.</li>
+<li>Develop an ordered research plan.</li>
+<li>Invoke registered tools to retrieve relevant information.</li>
+<li>Preserve evidence provenance and retrieval metadata.</li>
+<li>Compare financial information across independent sources where
+available.</li>
+<li>Identify contradictory values, definitions, and reporting
+periods.</li>
+<li>Verify important claims before report generation.</li>
+<li>Produce a structured report with citations and limitations.</li>
+<li>Recover from tool failures without fabricating evidence.</li>
+<li>Evaluate its research quality using repeatable tests and
+metrics.</li>
+</ul>
+<h3 id="scope">2.2 Scope</h3>
+<p>The intended research sources include SEC EDGAR filings, financial
+data APIs, company disclosures, earnings information, news sources, and
+web search.</p>
+<p>The system includes research planning, tool orchestration, memory
+management, evidence synthesis, conflict resolution, fact checking,
+reporting, logging, and evaluation.</p>
+<h3 id="out-of-scope">2.3 Out of scope</h3>
+<p>The system is a research assistant, not an autonomous investment
+adviser. It must not issue investment recommendations or
+predictions.</p>
+<p>The architecture does not assume that every external service is free,
+available, accurate, or accessible without credentials. API
+availability, terms, rate limits, and data coverage must be verified
+during implementation.</p>
+<h2 id="architectural-goals-and-principles">3. Architectural Goals and
+Principles</h2>
+<p>The design follows these principles:</p>
+<ol type="1">
+<li><strong>Evidence before assertion:</strong> factual claims require
+identifiable supporting evidence.</li>
+<li><strong>Source traceability:</strong> evidence should preserve
+source identity, URL, retrieval time, and relevant reporting
+period.</li>
+<li><strong>Independent corroboration:</strong> important numerical
+claims should be checked against at least two sources where
+available.</li>
+<li><strong>Explicit uncertainty:</strong> missing, stale,
+contradictory, or unverified information must be labelled.</li>
+<li><strong>Bounded autonomy:</strong> each research run must enforce a
+maximum of 20 tool calls.</li>
+<li><strong>Controlled capabilities:</strong> the agent may invoke only
+registered and permitted tools.</li>
+<li><strong>Schema validation:</strong> tool inputs and outputs must
+follow explicit contracts.</li>
+<li><strong>Graceful degradation:</strong> partial research is
+preferable to fabricated completeness.</li>
+<li><strong>Separation of concerns:</strong> planning, execution,
+evidence management, synthesis, and reporting should be independently
+testable.</li>
+<li><strong>Reproducibility:</strong> structured logs should explain
+important decisions and execution outcomes.</li>
+<li><strong>Data minimization:</strong> credentials and unnecessary
+sensitive information must not enter prompts, logs, or persistent
+memory.</li>
+<li><strong>Honest reporting:</strong> the final report must accurately
+reflect what was and was not established.</li>
+</ol>
+<h2 id="high-level-architecture">4. High-Level Architecture</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode mermaid"><code class="sourceCode mermaid"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">flowchart</span> <span class="cn">TD</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">A</span>[<span class="vs">User Research Question</span>] <span class="pp">--&gt;</span> <span class="dt">B</span>[<span class="vs">Query Analyzer</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">B</span> <span class="pp">--&gt;</span> <span class="dt">C</span>{<span class="vs">Ambiguous Request?</span>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">C</span> <span class="pp">--</span> <span class="vs">Yes </span><span class="pp">--&gt;</span> <span class="dt">D</span>[<span class="vs">Disambiguation</span>]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">D</span> <span class="pp">--&gt;</span> <span class="dt">E</span>[<span class="vs">Research Planner</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">C</span> <span class="pp">--</span> <span class="vs">No </span><span class="pp">--&gt;</span> <span class="dt">E</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">E</span> <span class="pp">--&gt;</span> <span class="dt">F</span>[<span class="vs">Agent Core</span>]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">F</span> <span class="pp">--&gt;</span> <span class="dt">G</span>[<span class="vs">Execution Controller</span>]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">G</span> <span class="pp">--&gt;</span> <span class="dt">H</span>[<span class="vs">Tool Registry</span>]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">H</span> <span class="pp">--&gt;</span> <span class="dt">I</span>[<span class="vs">SEC and Company Tools</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">H</span> <span class="pp">--&gt;</span> <span class="dt">J</span>[<span class="vs">Financial and Earnings Tools</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">H</span> <span class="pp">--&gt;</span> <span class="dt">K</span>[<span class="vs">Web and News Tools</span>]</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">H</span> <span class="pp">--&gt;</span> <span class="dt">L</span>[<span class="vs">Calculator and Verification Tools</span>]</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">I</span> <span class="pp">--&gt;</span> <span class="dt">M</span>[<span class="vs">Evidence Store</span>]</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">J</span> <span class="pp">--&gt;</span> <span class="dt">M</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">K</span> <span class="pp">--&gt;</span> <span class="dt">M</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">L</span> <span class="pp">--&gt;</span> <span class="dt">M</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">M</span> <span class="pp">--&gt;</span> <span class="dt">N</span>[<span class="vs">Context Manager</span>]</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">N</span> <span class="pp">--&gt;</span> <span class="dt">O</span>[<span class="vs">Memory System</span>]</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">N</span> <span class="pp">--&gt;</span> <span class="dt">P</span>[<span class="vs">Synthesis Engine</span>]</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">P</span> <span class="pp">--&gt;</span> <span class="dt">Q</span>[<span class="vs">Conflict Resolver</span>]</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Q</span> <span class="pp">--&gt;</span> <span class="dt">R</span>[<span class="vs">Fact Checker</span>]</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">R</span> <span class="pp">--&gt;</span> <span class="dt">S</span>{<span class="vs">Evidence Sufficient?</span>}</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">S</span> <span class="pp">--</span> <span class="vs">Continue Within Budget </span><span class="pp">--&gt;</span> <span class="dt">F</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">S</span> <span class="pp">--</span> <span class="vs">Yes </span><span class="pp">--&gt;</span> <span class="dt">T</span>[<span class="vs">Report Generator</span>]</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">S</span> <span class="pp">--</span> <span class="vs">No, Budget Exhausted </span><span class="pp">--&gt;</span> <span class="dt">U</span>[<span class="vs">Partial Report</span>]</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="dt">T</span> <span class="pp">--&gt;</span> <span class="dt">V</span>[<span class="vs">Final Research Report</span>]</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">U</span> <span class="pp">--&gt;</span> <span class="dt">V</span></span></code></pre></div>
+<p>The diagram represents the intended logical design. It does not imply
+that all components have already been implemented.</p>
+<h3 id="architectural-layers">4.1 Architectural layers</h3>
+<p><strong>Interaction and analysis layer:</strong> receives and
+interprets research requests.</p>
+<p><strong>Planning and orchestration layer:</strong> creates research
+tasks, schedules actions, enforces limits, and manages the cognitive
+loop.</p>
+<p><strong>Tool execution layer:</strong> exposes validated research
+capabilities through the Tool Registry.</p>
+<p><strong>Evidence and memory layer:</strong> stores research
+observations, source metadata, active context, and relevant historical
+findings.</p>
+<p><strong>Synthesis and verification layer:</strong> combines evidence,
+resolves conflicts, and verifies claims.</p>
+<p><strong>Reporting and evaluation layer:</strong> produces the
+required report and evaluates system quality.</p>
+<h2 id="component-responsibilities">5. Component Responsibilities</h2>
+<h3 id="query-analyzer">5.1 Query Analyzer</h3>
+<p>The Query Analyzer converts natural-language questions into
+structured research requests. It extracts the target company, research
+objective, requested period, comparison targets, and output
+constraints.</p>
+<p>It should distinguish explicitly provided values from uncertain
+interpretations. When a request is ambiguous, it should flag the
+ambiguity rather than silently inventing a missing identifier.</p>
+<p><strong>Input:</strong> user query and relevant permitted
+context.</p>
+<p><strong>Output:</strong> normalized research request with subject,
+objective, time scope, constraints, and ambiguity indicators.</p>
+<h3 id="disambiguation">5.2 Disambiguation</h3>
+<p>The Disambiguation component resolves uncertainty about company
+names, tickers, legal entities, exchanges, and reporting periods.</p>
+<p>It should compare available identifiers and retain the evidence
+supporting entity selection. If the evidence cannot establish the
+intended subject, the agent should ask for clarification or clearly
+restrict the scope of its findings.</p>
+<h3 id="research-planner">5.3 Research Planner</h3>
+<p>The Research Planner decomposes the research objective into ordered
+tasks. Each task should identify its objective, dependencies, expected
+evidence, suitable tool categories, and completion criteria.</p>
+<p>For earnings research, tasks might include identifying the correct
+reporting period, retrieving official disclosures, obtaining comparative
+financial metrics, reviewing news, identifying risks, and verifying
+numerical claims.</p>
+<p>The plan may be revised when evidence is insufficient or a source
+fails. Replanning must respect the tool-call budget.</p>
+<h3 id="agent-core">5.4 Agent Core</h3>
+<p>The Agent Core coordinates planning, execution, observations, memory
+updates, verification, and report generation.</p>
+<p>It tracks pending and completed tasks, evidence identifiers,
+unresolved questions, errors, and remaining tool calls.</p>
+<p>The core must not treat a successful HTTP response as proof that its
+content is correct. It must inspect the result, validate its structure,
+and assess whether it supports the intended claim.</p>
+<h3 id="execution-controller">5.5 Execution Controller</h3>
+<p>The Execution Controller enforces operational constraints, including
+the maximum of 20 tool calls per research run, timeouts, retry limits,
+and approved tool access.</p>
+<p>A tool call is counted whenever the system invokes a registered tool.
+Retries must be counted consistently; they must not bypass the
+budget.</p>
+<p>The controller should prevent execution when a proposed action is
+invalid, unauthorized, unnecessary, or outside the remaining budget.</p>
+<h3 id="tool-registry">5.6 Tool Registry</h3>
+<p>The Tool Registry exposes approved capabilities through stable names,
+descriptions, input schemas, output contracts, and error
+conventions.</p>
+<p>It should validate arguments before invocation, record execution
+outcomes, and return normalized results or structured errors.</p>
+<p>The agent must not execute arbitrary model-generated code or invoke
+unregistered functions.</p>
+<h3 id="evidence-collector">5.7 Evidence Collector</h3>
+<p>The Evidence Collector normalizes tool responses into evidence
+records. It preserves source attribution, retrieval timestamps,
+reporting periods, units, and relevant verification information.</p>
+<p>It should distinguish a primary source from a secondary source and
+avoid treating duplicated copies of the same underlying report as
+independent corroboration.</p>
+<h3 id="context-manager">5.8 Context Manager</h3>
+<p>The Context Manager selects relevant evidence for the current task,
+controls the active context, tracks research progress, and provides the
+synthesis engine with appropriately scoped information.</p>
+<p>It should retain references to original evidence rather than removing
+provenance when summarizing information.</p>
+<h3 id="synthesis-engine">5.9 Synthesis Engine</h3>
+<p>The Synthesis Engine combines verified evidence into a coherent
+explanation. It should identify agreements, disagreements, missing
+information, and changes across reporting periods.</p>
+<p>The engine must distinguish reported facts, derived calculations,
+external estimates, and analytical interpretations.</p>
+<h3 id="conflict-resolver">5.10 Conflict Resolver</h3>
+<p>The Conflict Resolver examines incompatible claims and values. It
+evaluates source authority, publication date, reporting period, units,
+metric definitions, company identity, and whether the values are
+genuinely comparable.</p>
+<p>It should preserve unresolved disagreements and document why one
+source may be more appropriate for a particular claim.</p>
+<h3 id="fact-checker">5.11 Fact Checker</h3>
+<p>The Fact Checker checks whether material claims have sufficient
+evidence, whether cited sources support those claims, and whether
+numerical comparisons are meaningful.</p>
+<p>Where independent corroboration is unavailable, the system should
+report the limitation rather than manufacture a second source.</p>
+<h3 id="report-generator">5.12 Report Generator</h3>
+<p>The Report Generator produces the required report sections,
+citations, methodology notes, and limitations.</p>
+<p>It must not introduce unsupported facts during summarization or
+conceal incomplete research.</p>
+<h2 id="cognitive-loop-and-execution-lifecycle">6. Cognitive Loop and
+Execution Lifecycle</h2>
+<p>The cognitive loop combines an initial research plan with iterative
+action, observation, and reassessment.</p>
+<h3 id="lifecycle">6.1 Lifecycle</h3>
+<ol type="1">
+<li><strong>Receive:</strong> accept the research question and permitted
+context.</li>
+<li><strong>Normalize:</strong> extract the subject, objective,
+reporting period, and constraints.</li>
+<li><strong>Disambiguate:</strong> resolve material ambiguity or request
+clarification.</li>
+<li><strong>Plan:</strong> create research tasks with dependencies and
+completion criteria.</li>
+<li><strong>Select:</strong> choose a relevant registered tool for the
+next task.</li>
+<li><strong>Validate:</strong> validate arguments, permissions, and
+execution budget.</li>
+<li><strong>Execute:</strong> invoke the tool with a defined
+timeout.</li>
+<li><strong>Observe:</strong> inspect the returned result or structured
+error.</li>
+<li><strong>Record:</strong> store evidence and execution metadata.</li>
+<li><strong>Reassess:</strong> update task status and identify
+unresolved questions.</li>
+<li><strong>Adapt:</strong> continue, replan, use a fallback, or
+stop.</li>
+<li><strong>Verify:</strong> check important claims and material
+conflicts.</li>
+<li><strong>Synthesize:</strong> prepare a supported narrative.</li>
+<li><strong>Report:</strong> generate a complete or explicitly partial
+report.</li>
+</ol>
+<h3 id="stopping-conditions">6.2 Stopping conditions</h3>
+<p>The loop must stop when the research objective is adequately
+addressed, the 20-call budget is exhausted, required sources cannot be
+accessed, essential ambiguity remains unresolved, or further execution
+is unjustified.</p>
+<p>Stopping does not necessarily mean success. The final status must
+distinguish completed research, partial completion, and failure.</p>
+<h3 id="retry-and-replanning-policy">6.3 Retry and replanning
+policy</h3>
+<p>Retries should be limited to potentially transient failures such as
+timeouts or temporary rate limits. Bounded exponential backoff may be
+used where appropriate.</p>
+<p>Authentication errors, invalid arguments, and unsupported requests
+usually require correction or a different approved source instead of
+repeating the identical call.</p>
+<p>A fallback must be recorded, and the report must identify the source
+that actually supplied the evidence.</p>
+<h3 id="execution-trace">6.4 Execution trace</h3>
+<p>Each run should record its run identifier, normalized request, plan,
+task transitions, tool invocations, errors, retries, evidence
+identifiers, remaining budget, verification outcomes, and final
+status.</p>
+<p>Logs must not contain API keys, passwords, or unnecessary sensitive
+data.</p>
+<h2 id="memory-architecture">7. Memory Architecture</h2>
+<p>The system uses three logical memory layers: short-term memory,
+long-term vector memory, and episodic memory.</p>
+<h3 id="short-term-memory">7.1 Short-term memory</h3>
+<p>Short-term memory contains information needed during the active
+research run.</p>
+<p>It includes the current request, research plan, completed tasks,
+pending tasks, evidence references, unresolved conflicts, retry state,
+and remaining tool-call budget.</p>
+<p>Short-term memory should be isolated by research run unless cross-run
+context is explicitly needed and permitted. It should be cleared or
+released according to the run lifecycle.</p>
+<h3 id="long-term-vector-memory">7.2 Long-term vector memory</h3>
+<p>Long-term vector memory supports semantic retrieval of useful
+historical research material, such as previously indexed company
+disclosures, financial research notes, methodology documentation, and
+relevant source excerpts.</p>
+<p>Documents should be chunked into retrievable units and stored with
+metadata such as source URL, company identifier, publication date,
+reporting period, document type, and ingestion timestamp.</p>
+<p>Embeddings enable similarity-based retrieval, but semantic similarity
+alone does not establish truth or freshness. Retrieved information must
+be checked for relevance, source authority, date, and applicability to
+the current question.</p>
+<p>Historical data must not be presented as current without
+verification.</p>
+<h3 id="episodic-memory">7.3 Episodic memory</h3>
+<p>Episodic memory stores records of completed research runs and their
+outcomes.</p>
+<p>An episode may contain the original research objective, plan summary,
+tools used, evidence references, conflicts encountered, failure events,
+report location, and evaluation results.</p>
+<p>Episodes support learning from prior execution patterns, avoiding
+unnecessary repetition, and reproducing earlier research decisions.</p>
+<p>They should not be used as unquestioned factual authority. Important
+historical claims must be revalidated against appropriate current
+sources.</p>
+<h3 id="memory-selection-and-retrieval">7.4 Memory selection and
+retrieval</h3>
+<p>Memory retrieval should consider semantic relevance, entity identity,
+date, source type, and task requirements.</p>
+<p>The Context Manager should select the smallest useful set of records
+while retaining evidence provenance. Duplicate or stale records should
+not be treated as independent corroboration.</p>
+<h3 id="memory-lifecycle-and-privacy">7.5 Memory lifecycle and
+privacy</h3>
+<p>The implementation should define retention, deletion, update, and
+isolation behavior. Persistent memory must not store credentials or
+unnecessary personal data.</p>
+<p>Memory failures should not cause fabricated evidence. If memory is
+unavailable, the agent should continue with accessible sources where
+possible and disclose material limitations.</p>
+<h2 id="tool-registry-and-required-research-tools">8. Tool Registry and
+Required Research Tools</h2>
+<p>The implementation must provide at least ten research tools. The
+following tool inventory defines the intended capabilities.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SEC EDGAR</td>
+<td>Retrieve official company filings and disclosure references</td>
+</tr>
+<tr>
+<td>Financial API</td>
+<td>Retrieve financial metrics with units and periods</td>
+</tr>
+<tr>
+<td>Web Search</td>
+<td>Discover relevant pages and source URLs</td>
+</tr>
+<tr>
+<td>News Sentiment</td>
+<td>Retrieve news evidence and calculate or report sentiment</td>
+</tr>
+<tr>
+<td>Earnings Tool</td>
+<td>Retrieve earnings releases or transcript information</td>
+</tr>
+<tr>
+<td>Company Profile</td>
+<td>Retrieve company identity and business information</td>
+</tr>
+<tr>
+<td>Peer Comparison</td>
+<td>Compare companies using compatible metrics</td>
+</tr>
+<tr>
+<td>Calculator</td>
+<td>Perform explicit, reproducible numerical calculations</td>
+</tr>
+<tr>
+<td>Fact Checker</td>
+<td>Verify claims against supporting evidence</td>
+</tr>
+<tr>
+<td>Report Generator</td>
+<td>Assemble the required structured report</td>
+</tr>
+</tbody>
+</table>
+<p>The exact providers, APIs, and free-tier availability must be
+confirmed during implementation. A tool must clearly report when it
+lacks access to a requested source.</p>
+<h3 id="common-tool-contract">8.1 Common tool contract</h3>
+<p>Every tool should have:</p>
+<ul>
+<li>A unique tool name and descriptive purpose.</li>
+<li>A validated input schema.</li>
+<li>A documented output structure.</li>
+<li>A timeout and error policy.</li>
+<li>Source attribution where applicable.</li>
+<li>Logging and execution accounting.</li>
+<li>Tests for normal, invalid, and failure cases.</li>
+</ul>
+<p>A normalized tool result should distinguish successful data retrieval
+from errors. It should also represent empty results separately from
+failures.</p>
+<h3 id="source-specific-requirements">8.2 Source-specific
+requirements</h3>
+<p><strong>SEC EDGAR:</strong> preserve filing identifiers, filing
+dates, document references, and reporting periods.</p>
+<p><strong>Financial APIs:</strong> preserve currency, units, period,
+metric definition, and source timestamp.</p>
+<p><strong>Web Search:</strong> preserve result URLs and available
+publication metadata. Search snippets should not automatically be
+treated as verified evidence.</p>
+<p><strong>News and earnings tools:</strong> preserve publication dates
+and distinguish reported events from commentary or sentiment.</p>
+<p><strong>Company Profile:</strong> preserve entity identifiers and
+distinguish official company information from secondary
+descriptions.</p>
+<p><strong>Peer Comparison:</strong> compare equivalent periods,
+currencies, accounting definitions, and units.</p>
+<p><strong>Calculator:</strong> use deterministic calculations and
+record the formula and inputs.</p>
+<p><strong>Fact Checker:</strong> record the claim, supporting sources,
+verification outcome, and unresolved limitations.</p>
+<p><strong>Report Generator:</strong> ensure required sections and
+citations are present before finalization.</p>
+<h2 id="evidence-model-and-data-contracts">9. Evidence Model and Data
+Contracts</h2>
+<p>Each evidence item should contain the fields needed to identify and
+evaluate its source.</p>
+<p>A conceptual evidence record is:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;evidence_id&quot;</span><span class="fu">:</span> <span class="st">&quot;unique-record-id&quot;</span><span class="fu">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;claim&quot;</span><span class="fu">:</span> <span class="st">&quot;Claim supported by the source&quot;</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;source_name&quot;</span><span class="fu">:</span> <span class="st">&quot;Source name&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;source_url&quot;</span><span class="fu">:</span> <span class="st">&quot;https://example.com/source&quot;</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;source_type&quot;</span><span class="fu">:</span> <span class="st">&quot;primary_or_secondary&quot;</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;retrieved_at&quot;</span><span class="fu">:</span> <span class="st">&quot;ISO-8601 timestamp&quot;</span><span class="fu">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;published_at&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;company_id&quot;</span><span class="fu">:</span> <span class="st">&quot;resolved-company-identifier&quot;</span><span class="fu">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;reporting_period&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;unit&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;verification_status&quot;</span><span class="fu">:</span> <span class="st">&quot;unverified&quot;</span><span class="fu">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;limitations&quot;</span><span class="fu">:</span> <span class="ot">[]</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>This is an illustrative contract, not an assertion that the
+application already implements this exact schema.</p>
+<p>The implementation should use validated data models and appropriate
+types. Missing values must be represented explicitly rather than
+replaced with invented defaults.</p>
+<p>Evidence should retain the original source reference and sufficient
+context to verify the claim. Derived calculations should additionally
+record their formula, input evidence identifiers, and assumptions.</p>
+<h2 id="multi-source-synthesis-and-conflict-resolution">10. Multi-Source
+Synthesis and Conflict Resolution</h2>
+<h3 id="evidence-classification">10.1 Evidence classification</h3>
+<p>Evidence should be classified by source type, publication date,
+reporting period, relevance, and verification status.</p>
+<p>Official regulatory filings and company disclosures may provide
+authoritative reported figures. Financial aggregators can offer
+convenient cross-checks but may use different definitions or update
+schedules. News sources can provide context but should not replace
+primary evidence when primary evidence is available.</p>
+<p>Source authority must be assessed in relation to the specific claim
+rather than through a universal ranking.</p>
+<h3 id="conflict-detection">10.2 Conflict detection</h3>
+<p>Potential conflicts include:</p>
+<ul>
+<li>Different reported values for the same metric.</li>
+<li>Different reporting periods or fiscal-year definitions.</li>
+<li>Currency or unit mismatches.</li>
+<li>Differences between GAAP and non-GAAP measures.</li>
+<li>Restated figures versus previously reported values.</li>
+<li>Disagreement about dates, events, or company identity.</li>
+<li>News reports that describe an event differently.</li>
+</ul>
+<h3 id="resolution-procedure">10.3 Resolution procedure</h3>
+<ol type="1">
+<li>Identify the conflicting claims and their evidence identifiers.</li>
+<li>Confirm that the claims refer to the same entity and period.</li>
+<li>Compare units, currencies, and metric definitions.</li>
+<li>Examine source authority and publication dates.</li>
+<li>Check for restatements or subsequent corrections.</li>
+<li>Determine whether the apparent conflict can be explained.</li>
+<li>Record the reasoning and remaining uncertainty.</li>
+<li>Disclose material unresolved differences in the report.</li>
+</ol>
+<p>The system must not select a value solely because it appears more
+frequently or agrees with the initial hypothesis.</p>
+<h3 id="numerical-cross-checking">10.4 Numerical cross-checking</h3>
+<p>Important numerical claims should be checked against at least two
+sources where available. Sources should be genuinely independent and
+sufficiently comparable.</p>
+<p>If only one reliable source exists, the report should identify that
+limitation. A calculation derived from one source does not automatically
+count as independent corroboration of that source.</p>
+<h2 id="error-handling-fallbacks-and-graceful-degradation">11. Error
+Handling, Fallbacks, and Graceful Degradation</h2>
+<h3 id="error-categories">11.1 Error categories</h3>
+<p>The system should distinguish at least the following failures:</p>
+<ul>
+<li>API outages and connection errors.</li>
+<li>Rate limits and temporary service restrictions.</li>
+<li>Authentication and authorization failures.</li>
+<li>Timeouts and unavailable resources.</li>
+<li>Malformed responses or schema validation failures.</li>
+<li>Empty search results.</li>
+<li>Stale or contradictory evidence.</li>
+<li>Unsupported tool requests.</li>
+<li>Invalid calculations or incompatible units.</li>
+<li>Insufficient evidence or failed fact verification.</li>
+<li>Repeated actions without useful progress.</li>
+<li>Premature conclusions and unsupported claims.</li>
+</ul>
+<h3 id="error-handling-process">11.2 Error-handling process</h3>
+<p>For each error, the system should identify the failing component,
+record a sanitized diagnostic, determine whether a retry is justified,
+and select an approved fallback when available.</p>
+<p>Retries must be bounded and counted against the tool-call budget. The
+system should not retry deterministic failures indefinitely.</p>
+<h3 id="fallback-chains">11.3 Fallback chains</h3>
+<p>Fallbacks should be configured for specific capabilities rather than
+applied indiscriminately.</p>
+<p>For example, if a financial API fails, the agent may attempt another
+registered source or retrieve an official company filing. If a news
+source is unavailable, the system may continue with other accessible
+evidence while disclosing the missing coverage.</p>
+<p>The fallback result must preserve its own provenance. A fallback is
+not proof that the original source succeeded.</p>
+<h3 id="graceful-degradation-protocol">11.4 Graceful degradation
+protocol</h3>
+<p>When a source or component fails, the system should:</p>
+<ol type="1">
+<li>Record the failure and affected research task.</li>
+<li>Identify available alternatives.</li>
+<li>Continue only if the remaining evidence supports meaningful
+progress.</li>
+<li>Reassess whether the research objective remains achievable.</li>
+<li>Generate a partial report if appropriate.</li>
+<li>Identify incomplete sections and missing sources.</li>
+<li>Explain how the limitations affect the conclusions.</li>
+</ol>
+<p>The system must never fabricate evidence to make a report appear
+complete.</p>
+<h2 id="security-reliability-and-operational-constraints">12. Security,
+Reliability, and Operational Constraints</h2>
+<h3 id="credential-management">12.1 Credential management</h3>
+<p>API keys and credentials should be read from environment variables or
+an approved secrets-management mechanism. They must not be committed to
+version control or embedded in source code.</p>
+<p>The <code>.env.example</code> file should document required variable
+names using placeholders rather than real credentials.</p>
+<h3 id="input-and-output-validation">12.2 Input and output
+validation</h3>
+<p>Validate user inputs and tool arguments before execution. Validate
+external responses before using them in calculations, memory, synthesis,
+or reports.</p>
+<p>External content must be treated as untrusted data. Instructions
+embedded in retrieved web pages, filings, or transcripts must not
+override the system’s defined behavior or tool permissions.</p>
+<h3 id="reliability">12.3 Reliability</h3>
+<p>External calls should use appropriate timeouts and bounded retries.
+Failures should be converted into predictable error structures so that
+the Agent Core can decide whether to continue.</p>
+<h3 id="resource-controls">12.4 Resource controls</h3>
+<p>Each run must enforce the maximum of 20 tool calls. Additional
+controls should include request timeouts, bounded retries, memory limits
+where practical, and protection against repeated execution of equivalent
+unsuccessful tasks.</p>
+<h3 id="logging">12.5 Logging</h3>
+<p>Logs should capture execution outcomes, evidence identifiers, errors,
+and important state transitions. They must not expose credentials or
+unnecessary sensitive information.</p>
+<h2 id="report-generation-specification">13. Report Generation
+Specification</h2>
+<p>The final report must contain these six sections.</p>
+<h3 id="executive-summary">13.1 Executive Summary</h3>
+<p>Summarize the research objective, principal evidence-supported
+findings, significant risks or uncertainties, and important
+limitations.</p>
+<h3 id="company-overview">13.2 Company Overview</h3>
+<p>Describe the identified company, its business, and relevant context
+supported by sources.</p>
+<h3 id="financial-analysis">13.3 Financial Analysis</h3>
+<p>Present relevant financial metrics with periods, currencies, units,
+source citations, and calculations where applicable. Explain
+comparability limitations.</p>
+<h3 id="risk-assessment">13.4 Risk Assessment</h3>
+<p>Identify material risks supported by the evidence. Distinguish
+disclosed risks from external commentary and analytical
+interpretation.</p>
+<h3 id="competitive-position">13.5 Competitive Position</h3>
+<p>Compare relevant competitors using compatible metrics and periods.
+Identify gaps where comparable data is unavailable.</p>
+<h3 id="research-methodology-notes">13.6 Research Methodology Notes</h3>
+<p>Describe the sources consulted, verification approach, relevant
+calculations, conflicts, unavailable sources, tool failures, and
+limitations.</p>
+<h3 id="reporting-rules">13.7 Reporting rules</h3>
+<ul>
+<li>Cite factual claims using identifiable source references.</li>
+<li>Preserve reporting periods, units, and currencies.</li>
+<li>Distinguish facts from interpretation.</li>
+<li>Disclose material conflicts and insufficient corroboration.</li>
+<li>Do not invent values, sources, or citations.</li>
+<li>Do not provide investment recommendations or predictions.</li>
+<li>Mark incomplete sections when research is partial.</li>
+<li>Ensure conclusions do not exceed what the available evidence
+supports.</li>
+</ul>
+<h2 id="evaluation-framework">14. Evaluation Framework</h2>
+<p>Evaluation must assess both the correctness of outputs and the
+reliability of the research process.</p>
+<p>The following are proposed evaluation metrics. Their precise
+formulas, thresholds, and aggregation methods must be implemented and
+documented in the evaluation module.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Metric</th>
+<th>What it evaluates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Factual accuracy</td>
+<td>Whether checked claims are correct</td>
+</tr>
+<tr>
+<td>Citation coverage</td>
+<td>Proportion of factual claims with citations</td>
+</tr>
+<tr>
+<td>Citation correctness</td>
+<td>Whether cited sources support their claims</td>
+</tr>
+<tr>
+<td>Source diversity</td>
+<td>Use of meaningfully distinct sources</td>
+</tr>
+<tr>
+<td>Source authority</td>
+<td>Suitability of sources for the claims</td>
+</tr>
+<tr>
+<td>Numerical accuracy</td>
+<td>Correctness of reported numerical values</td>
+</tr>
+<tr>
+<td>Cross-source verification</td>
+<td>Appropriate independent corroboration</td>
+</tr>
+<tr>
+<td>Conflict detection rate</td>
+<td>Identification of known material conflicts</td>
+</tr>
+<tr>
+<td>Conflict resolution quality</td>
+<td>Quality of documented conflict handling</td>
+</tr>
+<tr>
+<td>Hallucination rate</td>
+<td>Unsupported factual claims in output</td>
+</tr>
+<tr>
+<td>Task completion rate</td>
+<td>Completion of planned research tasks</td>
+</tr>
+<tr>
+<td>Plan adherence</td>
+<td>Execution relative to the intended plan</td>
+</tr>
+<tr>
+<td>Tool selection accuracy</td>
+<td>Suitability of selected tools</td>
+</tr>
+<tr>
+<td>Tool-call efficiency</td>
+<td>Calls used relative to useful completed work</td>
+</tr>
+<tr>
+<td>Error recovery rate</td>
+<td>Successful recovery from recoverable failures</td>
+</tr>
+<tr>
+<td>Graceful degradation</td>
+<td>Quality of output under partial failure</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>Elapsed time per research run</td>
+</tr>
+<tr>
+<td>Cost per run</td>
+<td>Measured provider and execution cost, where available</td>
+</tr>
+<tr>
+<td>Memory retrieval relevance</td>
+<td>Relevance of retrieved memory</td>
+</tr>
+<tr>
+<td>Memory provenance coverage</td>
+<td>Traceability of claims retrieved from memory</td>
+</tr>
+<tr>
+<td>Report completeness</td>
+<td>Presence of required report sections</td>
+</tr>
+<tr>
+<td>Ambiguity handling</td>
+<td>Correct treatment of unclear requests</td>
+</tr>
+<tr>
+<td>Reproducibility</td>
+<td>Ability to reconstruct important execution decisions</td>
+</tr>
+<tr>
+<td>Budget compliance</td>
+<td>Compliance with the 20-tool-call limit</td>
+</tr>
+</tbody>
+</table>
+<h3 id="evaluation-methodology">14.1 Evaluation methodology</h3>
+<p>Use a fixed set of benchmark questions with expected evidence,
+reference values where appropriate, and explicit grading criteria.</p>
+<p>Run tests against both normal and failure scenarios. Record the
+system version, test inputs, tool availability, observed outputs, metric
+results, and known limitations.</p>
+<p>Metrics should be computed from defined evidence rather than
+subjective impressions alone. Where a metric requires human judgement,
+document the scoring rubric.</p>
+<h3 id="regression-testing">14.2 Regression testing</h3>
+<p>Changes to planning, tool contracts, memory, synthesis, or reporting
+should be checked against previously passing tests.</p>
+<p>A change must not be considered an improvement solely because it
+produces longer or more confident reports.</p>
+<h2 id="eight-progressive-research-challenges">15. Eight Progressive
+Research Challenges</h2>
+<p>The project should validate the system against all eight prescribed
+research challenges.</p>
+<h3 id="challenge-1-microsoft-company-profile">Challenge 1 — Microsoft
+company profile</h3>
+<p>Research Microsoft and generate a company profile using relevant
+sources. Validate entity identification, citations, source metadata, and
+required report structure.</p>
+<h3 id="challenge-2-apple-earnings-analysis">Challenge 2 — Apple
+earnings analysis</h3>
+<p>Analyze Apple earnings for a clearly identified reporting period.
+Validate financial periods, numerical units, source corroboration, and
+calculations.</p>
+<h3 id="challenge-3-tesla-risk-assessment">Challenge 3 — Tesla risk
+assessment</h3>
+<p>Research Tesla-related risks using relevant company disclosures and
+other appropriate sources. Distinguish documented risks from commentary
+and unsupported speculation.</p>
+<h3 id="challenge-4-aws-azure-and-google-cloud-comparison">Challenge 4 —
+AWS, Azure, and Google Cloud comparison</h3>
+<p>Compare AWS, Azure, and Google Cloud using clearly defined metrics
+and comparable reporting periods. Document differences in definitions
+and source coverage.</p>
+<h3 id="challenge-5-contradictory-palantir-data">Challenge 5 —
+Contradictory Palantir data</h3>
+<p>Evaluate contradictory information about Palantir. Identify whether
+the differences arise from reporting periods, metric definitions, source
+dates, or unresolved disagreement.</p>
+<h3 id="challenge-6-ambiguous-query">Challenge 6 — Ambiguous query</h3>
+<p>Test an ambiguous research request. Verify that the agent identifies
+the ambiguity and requests clarification or transparently limits its
+assumptions.</p>
+<h3 id="challenge-7-memory-based-thematic-research">Challenge 7 —
+Memory-based thematic research</h3>
+<p>Evaluate whether relevant historical research can be retrieved from
+memory and used with appropriate source verification, temporal checks,
+and provenance.</p>
+<h3 id="challenge-8-full-report-and-stress-testing">Challenge 8 — Full
+report and stress testing</h3>
+<p>Run an end-to-end research task while testing failure handling,
+unavailable sources, malformed responses, retries, execution limits, and
+partial-report generation.</p>
+<p>For each challenge, store the query, execution trace, resulting
+report, evaluation outcomes, and identified limitations in the results
+directory.</p>
+<p>Challenge completion must be demonstrated by execution and saved
+evidence; describing a challenge in this document does not mean it has
+passed.</p>
+<h2 id="repository-structure-and-module-mapping">16. Repository
+Structure and Module Mapping</h2>
+<p>The implementation should follow the assignment’s required
+structure.</p>
+<pre class="text"><code>Project1A-PrashantBastola-AutonomousFinancialResearchAgent/
+├── README.md
+├── .zetheta-project.json
+├── .env.example
+├── .gitignore
+├── requirements.txt
+├── pyproject.toml
+├── ERROR_LOG.md
+├── agent/
+│   ├── __init__.py
+│   ├── core.py
+│   ├── prompts.py
+│   ├── parser.py
+│   ├── error_handler.py
+│   ├── fallback_chains.py
+│   ├── circuit_breaker.py
+│   ├── query_analyzer.py
+│   └── disambiguation.py
+├── tools/
+│   ├── __init__.py
+│   ├── tool_registry.py
+│   ├── schemas/
+│   ├── sec_edgar.py
+│   ├── financial_api.py
+│   ├── web_search.py
+│   ├── news_sentiment.py
+│   ├── earnings.py
+│   ├── company_profile.py
+│   ├── peer_comparison.py
+│   ├── calculator.py
+│   ├── fact_checker.py
+│   └── report_gen.py
+├── memory/
+│   ├── __init__.py
+│   ├── vector_store.py
+│   ├── context_manager.py
+│   └── episodic.py
+├── synthesis/
+│   ├── __init__.py
+│   ├── engine.py
+│   ├── conflict_resolver.py
+│   └── narrative.py
+├── evaluation/
+│   ├── __init__.py
+│   ├── metrics.py
+│   ├── benchmarks/
+│   └── dashboard.py
+├── docs/
+│   ├── architecture_specification.md
+│   ├── architecture_diagram.svg
+│   ├── trace_gallery.md
+│   └── evaluation_report_final.md
+├── results/
+│   ├── challenge_1_microsoft.md
+│   ├── challenge_2_apple.md
+│   ├── challenge_3_tesla.md
+│   ├── challenge_4_cloud_comparison.md
+│   ├── challenge_5_palantir_conflicts.md
+│   ├── challenge_6_ambiguous_query.md
+│   ├── challenge_7_memory_research.md
+│   └── challenge_8_full_report.md
+└── tests/</code></pre>
+<p>This tree is the intended target structure. Existing files should be
+preserved, and missing files should be added as implementation
+proceeds.</p>
+<h3 id="module-responsibilities">16.1 Module responsibilities</h3>
+<p>The <code>agent/</code> package manages planning, execution, query
+interpretation, prompts, and error handling.</p>
+<p>The <code>tools/</code> package implements registered research
+capabilities and their schemas.</p>
+<p>The <code>memory/</code> package manages active context, vector
+retrieval, and episodic records.</p>
+<p>The <code>synthesis/</code> package combines evidence, resolves
+conflicts, and constructs the narrative.</p>
+<p>The <code>evaluation/</code> package calculates quality metrics and
+runs benchmarks.</p>
+<p>The <code>docs/</code> and <code>results/</code> directories store
+architecture documentation, diagrams, traces, evaluation reports, and
+challenge evidence.</p>
+<h2 id="implementation-and-validation-roadmap">17. Implementation and
+Validation Roadmap</h2>
+<p>The project follows the assignment’s 15-day progression.</p>
+<h3 id="days-13-architecture-tools-and-environment">Days 1–3:
+Architecture, tools, and environment</h3>
+<ul>
+<li>Review the complete assignment and its requirements.</li>
+<li>Identify the seven deliberate errors and document them in
+<code>ERROR_LOG.md</code>.</li>
+<li>Finalize the architecture specification and diagram.</li>
+<li>Establish the project environment and dependencies.</li>
+<li>Design tool schemas and registry interfaces.</li>
+</ul>
+<h3 id="days-47-agent-tools-and-memory">Days 4–7: Agent, tools, and
+memory</h3>
+<ul>
+<li>Implement the core agent and cognitive loop.</li>
+<li>Add the required registered research tools.</li>
+<li>Implement validation, execution accounting, and structured
+errors.</li>
+<li>Build short-term, vector, and episodic memory.</li>
+<li>Add unit tests for core components.</li>
+</ul>
+<h3 id="days-810-synthesis-and-reliability">Days 8–10: Synthesis and
+reliability</h3>
+<ul>
+<li>Implement evidence normalization and synthesis.</li>
+<li>Add conflict detection and resolution.</li>
+<li>Implement fact checking and citation preservation.</li>
+<li>Add retries, fallbacks, and graceful degradation.</li>
+<li>Test incomplete and contradictory evidence.</li>
+</ul>
+<h3 id="days-1113-evaluation-and-optimization">Days 11–13: Evaluation
+and optimization</h3>
+<ul>
+<li>Define and implement the evaluation metrics.</li>
+<li>Run the eight progressive challenges.</li>
+<li>Record traces and research outputs.</li>
+<li>Evaluate failure scenarios and improve weak components.</li>
+<li>Run regression tests.</li>
+</ul>
+<h3 id="days-1415-documentation-and-submission">Days 14–15:
+Documentation and submission</h3>
+<ul>
+<li>Finalize the README and architecture documentation.</li>
+<li>Prepare the trace gallery and final evaluation report.</li>
+<li>Verify the challenge outputs and error log.</li>
+<li>Check repository completeness and reproducibility.</li>
+<li>Prepare the required demonstration and submission materials.</li>
+</ul>
+<p>The roadmap is a project plan, not evidence that these milestones
+have already been completed.</p>
+<h2 id="testing-strategy">18. Testing Strategy</h2>
+<h3 id="unit-tests">18.1 Unit tests</h3>
+<p>Unit tests should validate individual components, including request
+parsing, schema validation, calculations, source normalization, conflict
+detection, memory operations, and report formatting.</p>
+<h3 id="integration-tests">18.2 Integration tests</h3>
+<p>Integration tests should validate interactions between the Agent
+Core, Tool Registry, evidence storage, memory, synthesis, and
+reporting.</p>
+<p>External API calls should be mocked in deterministic tests where
+possible. Live integration tests should be separated from tests that
+must run without network access or credentials.</p>
+<h3 id="failure-tests">18.3 Failure tests</h3>
+<p>Test timeouts, rate limits, authentication errors, malformed
+responses, empty results, contradictory values, unavailable memory, and
+exhausted tool-call budgets.</p>
+<p>Verify that errors are recorded, retries remain bounded, and reports
+disclose material limitations.</p>
+<h3 id="acceptance-tests">18.4 Acceptance tests</h3>
+<p>A research run is acceptable only when it:</p>
+<ul>
+<li>Respects the configured tool-call limit.</li>
+<li>Uses registered tools with validated arguments.</li>
+<li>Preserves source references for factual claims.</li>
+<li>Handles material conflicts transparently.</li>
+<li>Avoids fabricated evidence.</li>
+<li>Produces the six required report sections.</li>
+<li>Identifies incomplete research and important limitations.</li>
+<li>Produces a trace suitable for evaluation and debugging.</li>
+</ul>
+<h2 id="assumptions-dependencies-and-limitations">19. Assumptions,
+Dependencies, and Limitations</h2>
+<p>The design assumes that at least some relevant research sources can
+be accessed during a run. Individual APIs may require credentials,
+impose rate limits, restrict access, or change their response
+formats.</p>
+<p>The final choice of providers, vector database, embedding model,
+language model, and deployment environment must be confirmed during
+implementation. Provider-specific behavior must not be assumed without
+testing.</p>
+<p>A vector database can improve retrieval but cannot independently
+establish factual correctness. Search results can be stale, incomplete,
+duplicated, or misleading. Source verification remains necessary.</p>
+<p>The quality of the final report depends on source coverage, entity
+resolution, metric comparability, and successful execution of the
+research plan. When these conditions are not satisfied, the agent must
+disclose the limitations.</p>
+<h2 id="final-acceptance-criteria">20. Final Acceptance Criteria</h2>
+<p>The architecture and implementation will be evaluated against the
+following criteria:</p>
+<ol type="1">
+<li>The required repository structure is present.</li>
+<li>The agent follows the selected hybrid planning and execution
+approach.</li>
+<li>The cognitive loop is bounded and observable.</li>
+<li>At least ten registered research tools are implemented.</li>
+<li>Short-term, long-term vector, and episodic memory are
+represented.</li>
+<li>Evidence records preserve source attribution and relevant
+metadata.</li>
+<li>Numerical claims are cross-checked against two sources where
+available.</li>
+<li>Material conflicts are identified and disclosed.</li>
+<li>Retries and fallback chains are bounded and traceable.</li>
+<li>The 20-tool-call maximum is enforced.</li>
+<li>Reports contain all six required sections.</li>
+<li>Missing evidence is never fabricated.</li>
+<li>The system does not produce investment recommendations or
+predictions.</li>
+<li>Evaluation includes at least 20 defined quality metrics.</li>
+<li>All eight research challenges have documented execution
+evidence.</li>
+<li>Tests cover normal operation and meaningful failure cases.</li>
+<li>Documentation describes limitations honestly.</li>
+<li>The project can be installed, tested, and run using documented
+instructions.</li>
+</ol>
+<p>Passing these criteria requires working implementation, tests, and
+saved evidence. This specification alone does not establish that the
+project has passed them.</p>
+<hr />
+<p><strong>End of Architecture Specification</strong></p>
+</body>
+</html>

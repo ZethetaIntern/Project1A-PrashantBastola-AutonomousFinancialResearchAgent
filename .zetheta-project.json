@@ -1,0 +1,30 @@
+{
+  "intern_identifier": "",
+  "intern_name": "Prashant Bastola",
+  "intern_email": "",
+  "project_code": "1A",
+  "project_title": "Autonomous Financial Research Agent with Multi-Source Synthesis",
+  "submission_type": "github",
+  "submission_date": "",
+  "tech_stack": [
+    "Python",
+    "LangGraph",
+    "LangChain",
+    "OpenAI",
+    "Chroma",
+    "SEC EDGAR API",
+    "Financial Data API"
+  ],
+  "duration_days": 15,
+  "github_repo_url": "",
+  "assessment_criteria": {
+    "architecture_design": true,
+    "tool_orchestration": true,
+    "memory_system": true,
+    "error_handling": true,
+    "evaluation_framework": true,
+    "research_output_quality": true,
+    "code_quality": true,
+    "documentation": true
+  }
+}

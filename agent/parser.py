@@ -1,4 +1,3 @@
-
 """Parse LLM responses into tool calls or final answers."""
 
 import json
@@ -31,84 +30,54 @@ def parse_response(text: str) -> ParsedResponse:
 
     cleaned = text.strip()
 
-    # Support JSON enclosed in Markdown code fences.
     if cleaned.startswith("```"):
         lines = cleaned.splitlines()
-
         if len(lines) < 3 or not lines[-1].strip().startswith("```"):
-            raise ResponseParseError(
-                "Markdown code fence is not properly closed."
-            )
-
-        # Remove the opening fence and optional language identifier.
+            raise ResponseParseError("Markdown code fence is not properly closed.")
         cleaned = "\n".join(lines[1:-1]).strip()
-
-        if not cleaned:
-            raise ResponseParseError(
-                "Response inside the Markdown code fence is empty."
-            )
 
     try:
         payload = json.loads(cleaned)
     except json.JSONDecodeError as exc:
-        # JSON-like output must not silently become a final answer.
         if cleaned.startswith(("{", "[")):
-            logger.warning("LLM returned malformed JSON.")
-            raise ResponseParseError(
-                "LLM returned malformed JSON."
-            ) from exc
-
-        # Permit ordinary prose as a final answer for compatibility.
-        logger.debug("LLM response interpreted as a plain-text answer.")
-
-        return ParsedResponse(
-            response_type="final",
-            content=cleaned,
-        )
+            raise ResponseParseError("LLM returned malformed JSON.") from exc
+        return ParsedResponse(response_type="final", content=cleaned)
 
     if not isinstance(payload, dict):
         raise ResponseParseError("JSON response must be an object.")
 
-    # Parse a tool call.
-    if "tool_call" in payload:
+    # Preferred format: {"action": "execute", "name": ..., "arguments": ...}
+    # Legacy format remains supported: {"tool_call": {...}}
+    if payload.get("action") == "execute":
+        name = payload.get("name")
+        arguments = payload.get("arguments", {})
+    elif "tool_call" in payload:
         call = payload["tool_call"]
-
         if not isinstance(call, dict):
             raise ResponseParseError("'tool_call' must be an object.")
-
         name = call.get("name")
         arguments = call.get("arguments", {})
+    else:
+        name = None
+        arguments = {}
 
+    if payload.get("action") == "final" or payload.get("type") == "final":
+        answer = payload.get("answer")
+        if not isinstance(answer, str) or not answer.strip():
+            raise ResponseParseError("Final response requires a non-empty answer.")
+        return ParsedResponse(response_type="final", content=answer.strip())
+
+    if name is not None:
         if not isinstance(name, str) or not name.strip():
-            raise ResponseParseError(
-                "Tool call requires a non-empty name."
-            )
-
+            raise ResponseParseError("Tool call requires a non-empty name.")
         if not isinstance(arguments, dict):
-            raise ResponseParseError(
-                "Tool arguments must be a JSON object."
-            )
-
+            raise ResponseParseError("Tool arguments must be a JSON object.")
         return ParsedResponse(
             response_type="tool_call",
             tool_name=name.strip(),
             arguments=arguments,
         )
 
-    # Parse a structured final answer.
-    if payload.get("type") == "final":
-        answer = payload.get("answer")
-
-        if not isinstance(answer, str) or not answer.strip():
-            raise ResponseParseError(
-                "Final response requires a non-empty answer."
-            )
-
-        return ParsedResponse(
-            response_type="final",
-            content=answer.strip(),
-        )
-
     raise ResponseParseError(
-        "JSON response must contain 'tool_call' or type='final'."
+        "JSON response must contain an execute action, a tool_call, or a final answer."
     )

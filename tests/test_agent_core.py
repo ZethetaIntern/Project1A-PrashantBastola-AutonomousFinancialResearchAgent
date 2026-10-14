@@ -96,6 +96,7 @@ def test_agent_rejects_empty_query(mock_registry):
         agent.run("   ")
 
 
+
 def test_agent_stops_at_iteration_limit(mock_registry):
     llm = Mock()
     llm.complete.return_value = mock_response(
@@ -114,7 +115,12 @@ def test_agent_stops_at_iteration_limit(mock_registry):
 
     assert result["status"] == "max_iterations_reached"
     assert result["iterations"] == 2
-    assert len(result["tool_calls"]) == 2
+
+    # The identical tool call must execute only once.
+    assert len(result["tool_calls"]) == 1
+    assert result["tool_calls"][0]["tool"] == "company_profile"
+
+    # The LLM is still called for both iterations.
     assert llm.complete.call_count == 2
 
 

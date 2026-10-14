@@ -43,24 +43,27 @@ class LLMResponse:
 
 
 def _is_retryable(exc: BaseException) -> bool:
-    """Retry transient network, rate-limit, and server errors."""
+    """Retry transient network and server errors, but not rate limits."""
     if isinstance(exc, (ValueError, TypeError)):
         return False
 
     status_code = getattr(exc, "status_code", None)
 
-    # Retry rate limits, server errors, and temporary gateway errors.
-    if status_code == 429 or (
-        isinstance(status_code, int) and status_code >= 500
-    ):
+    # Do not immediately retry rate limits; surface them to the caller.
+    if status_code == 429:
+        return False
+
+    # Retry temporary server and gateway errors.
+    if isinstance(status_code, int) and status_code >= 500:
         return True
 
-    # Retry connection failures and timeouts, not ordinary bad requests.
+    # Retry connection failures and timeouts.
     name = type(exc).__name__.lower()
     return any(
         marker in name
-        for marker in ("timeout", "connection", "ratelimit", "internalserver")
+        for marker in ("timeout", "connection", "internalserver")
     )
+
 
 
 class LLMClient:

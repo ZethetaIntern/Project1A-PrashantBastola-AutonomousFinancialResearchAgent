@@ -1,9 +1,7 @@
 
-"""Centralized application configuration."""
 
 import os
 from pathlib import Path
-
 from dotenv import load_dotenv
 
 # Load .env from the project root, regardless of the current working directory.

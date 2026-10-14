@@ -245,7 +245,7 @@ def build_default_registry() -> ToolRegistry:
 
     registry.register(
         name="company_profile",
-        description="Retrieve a mock company profile by ticker.",
+        description="Retrieve a company profile by ticker; verify returned fields against authoritative sources.",
         parameters=load_schema("company_profile.json"),
         function=get_company_profile,
     )
@@ -260,8 +260,8 @@ def build_default_registry() -> ToolRegistry:
     registry.register(
         name="sec_edgar",
         description=(
-            "Search SEC filing metadata by ticker and filing type. "
-            "Current implementation returns mock data only."
+            "Search SEC EDGAR filing information by ticker and filing type. "
+            "Check returned filing details and source links before relying on them."
         ),
         parameters=load_schema("sec_edgar.json"),
         function=search_sec_filings,
@@ -270,8 +270,8 @@ def build_default_registry() -> ToolRegistry:
     registry.register(
         name="financial_api",
         description=(
-            "Retrieve financial metrics for a company ticker. "
-            "Current implementation returns mock data only."
+            "Retrieve current financial metrics for a company ticker using Yahoo Finance. "
+            "Market data may be delayed or incomplete."
         ),
         parameters=load_schema("financial_api.json"),
         function=get_financial_data,
@@ -280,8 +280,8 @@ def build_default_registry() -> ToolRegistry:
     registry.register(
         name="web_search",
         description=(
-            "Search the web for financial research information. "
-            "Currently uses a mock implementation."
+            "Search the web for financial research information using Tavily. "
+            "Verify important claims against authoritative sources."
         ),
         parameters=load_schema("web_search.json"),
         function=search_web,
@@ -290,8 +290,8 @@ def build_default_registry() -> ToolRegistry:
     registry.register(
         name="news_sentiment",
         description=(
-            "Assess news sentiment for a company using supplied headlines. "
-            "Currently does not run a sentiment model."
+            "Retrieve company-related news and estimate headline sentiment. "
+            "Sentiment labels are automated and require independent verification."
         ),
         parameters=load_schema("news_sentiment.json"),
         function=analyze_news_sentiment,
@@ -300,8 +300,10 @@ def build_default_registry() -> ToolRegistry:
     registry.register(
         name="earnings",
         description=(
-            "Retrieve company earnings information and transcript metadata. "
-            "Currently returns mock data only."
+            "Retrieve reported annual or quarterly income-statement data "
+            "from Yahoo Finance for a company ticker. Supports a latest "
+            "period, annual or quarterly data, a four-digit year, or an "
+            "exact period-end date. Does not provide earnings transcripts."
         ),
         parameters=load_schema("earnings.json"),
         function=get_earnings,
